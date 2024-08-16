@@ -1,6 +1,0 @@
-python3 data/test_data_fetcher.py
-python3 news/test_gnews_fetcher.py
-python3 sentiment/test_sentiment_analyzer.py
-python3 sentiment/test_reddit_sentiment.py
-python3 strategy/test_decision_engine.py
-python3 ethics/test_ethics_checker.py

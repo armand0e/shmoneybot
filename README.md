@@ -1,104 +1,114 @@
-# $hmoneybot
+# MoneyBot: A Python-Based Trading Bot
 
-This project implements an enhanced trading bot that integrates technical analysis, sentiment analysis (including Reddit and GNews), and market sentiment analysis based on economic indicators like Inflation, CPI, and key statements from influential figures.
+MoneyBot is a Python-based trading bot designed to analyze financial data, sentiment, and market news to make informed trading decisions. The bot leverages multiple data sources, including Reddit, GDELT, and financial APIs, to gather comprehensive insights for stock trading.
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Project Structure](#project-structure)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Components](#components)
+   - [Financial Data Fetcher](#financial-data-fetcher)
+   - [Sentiment Analysis](#sentiment-analysis)
+   - [News Fetching](#news-fetching)
+   - [Stock Evaluation](#stock-evaluation)
+6. [Contributing](#contributing)
+7. [License](#license)
+
+## Project Overview
+
+MoneyBot is designed to assist traders in making data-driven decisions. By combining technical analysis, sentiment analysis, and world news, the bot evaluates stock performance and provides a recommendation to buy, sell, or hold a particular stock.
 
 ## Project Structure
-```
-ShmoneyBot/
-│
-├── README.md
-├── config.py
-├── cli.py
-│
-├── data/
-│   ├── data_fetcher.py
-│   ├── financial_data_fetcher.py
-│   ├── test_data_fetcher.py
-│
-├── news/
-│   ├── gdelt_fetcher.py
-│   ├── web_scraper.py
-│   ├── reddit_news_fetcher.py
-│   ├── test_gdelt_fetcher.py
-│   ├── test_reddit_news_fetcher.py
-│
-├── sentiment/
-│   ├── sentiment_analyzer.py
-│   ├── advanced_sentiment_analyzer.py
-│   ├── reddit_sentiment.py
-│   ├── test_sentiment_analyzer.py
-│   ├── test_reddit_sentiment.py
-│
-├── strategy/
-│   ├── decision_engine.py
-│   ├── test_decision_engine.py
-│
-└── ethics/
-├── ethics_checker.py
-├── test_ethics_checker.py
-```
-## File Descriptions and Debugging Instructions
 
-### `config.py`
-- **Description**: Contains API keys and global settings.
-- **Debugging**: Ensure API keys are correct and that the settings are properly configured.
+The project is organized into a single script with logical class separation:
 
-### `cli.py`
-- **Description**: The command-line interface for interacting with the bot. It allows you to run the entire pipeline or specific parts.
-- **Debugging**: Run with various stock symbols and check if the flow executes as expected.
+\```
+moneybot/
+├── config.py          # Configuration file for API keys and settings
+├── moneybot.py        # Main script containing all the functionality (combined main and stock logic)
+├── news.py            # Contains classes for fetching news from Reddit and GDELT
+├── sentiment.py       # Handles sentiment analysis and ethical considerations
+├── requirements.txt   # List of required Python packages
+└── README.md          # Project documentation
+\```
 
-### `data/`
-- **data_fetcher.py**: Fetches historical data for stocks. Uses APIs like Interactive Brokers.
-  - **Debugging**: Check if it correctly fetches data for different stock symbols.
-- **financial_data_fetcher.py**: Fetches real-time stock data using Yahoo Finance API.
-  - **Debugging**: Ensure it retrieves accurate real-time data for the stock symbols.
-- **test_data_fetcher.py**: Test script to validate data fetching.
-  - **Debugging**: Run the test and ensure the data output matches expectations.
+## Installation
 
-### `news/`
-- **gdelt_fetcher.py**: Fetches tone chart data from GDELT.
-  - **Debugging**: Ensure the API returns the correct tone chart data for given stock symbols.
-- **web_scraper.py**: Scrapes live news from financial websites.
-  - **Debugging**: Ensure the scraper captures relevant headlines and descriptions.
-- **reddit_news_fetcher.py**: Fetches news-related posts from relevant subreddits.
-  - **Debugging**: Ensure the correct subreddit is linked to the stock and that news data is accurately fetched.
-- **test_gdelt_fetcher.py**: Test script for GDELT tone chart fetching.
-  - **Debugging**: Verify the tone chart data and sentiment analysis results.
-- **test_reddit_news_fetcher.py**: Test script for Reddit news fetching.
-  - **Debugging**: Test with sample posts and verify the news data output.
+1. **Clone the repository**:
+   \```bash
+   git clone https://github.com/yourusername/moneybot.git
+   cd moneybot
+   \```
 
-### `sentiment/`
-- **advanced_sentiment_analyzer.py**: Analyzes sentiment of news articles using an advanced transformer-based model.
-  - **Debugging**: Check the sentiment score outputs for accuracy using advanced NLP techniques.
-- **sentiment_analyzer.py**: Basic sentiment analysis using VADER.
-  - **Debugging**: Verify that the sentiment score is accurate for given inputs.
-- **reddit_sentiment.py**: Fetches and analyzes sentiment of Reddit posts related to stocks.
-  - **Debugging**: Ensure the correct subreddit is linked to the stock and that sentiment analysis reflects the content.
-- **test_sentiment_analyzer.py**: Test script for advanced sentiment analysis.
-  - **Debugging**: Run test cases with predefined articles.
-- **test_reddit_sentiment.py**: Test script for Reddit sentiment analysis.
-  - **Debugging**: Test with sample posts and verify the sentiment output.
+2. **Install the required dependencies**:
+   Ensure you have Python 3.7+ installed, then install the dependencies:
+   \```bash
+   pip install -r requirements.txt
+   \```
 
-### `strategy/`
-- **decision_engine.py**: Combines technical data and sentiment to make trading decisions.
-  - **Debugging**: Test with various data and sentiment inputs to ensure decisions are logical.
-- **test_decision_engine.py**: Test script for decision making.
-  - **Debugging**: Validate decision outputs based on sample inputs.
+3. **Set up your API keys**:
+   Add your API keys in `config.py`. Example:
+   \```python
+   API_KEYS = {
+       'reddit_client_id': 'your_client_id',
+       'reddit_client_secret': 'your_client_secret',
+       'reddit_user_agent': 'your_user_agent',
+       # Add other API keys here if needed
+   }
+   \```
 
-### `ethics/`
-- **ethics_checker.py**: Checks for ethical concerns, like avoiding trades based on manipulative sentiment.
-  - **Debugging**: Ensure the checker raises warnings for extreme sentiment scores.
-- **test_ethics_checker.py**: Test script for ethics checks.
-  - **Debugging**: Test with different sentiment scores to ensure proper functioning.
+## Usage
 
----
+To run the bot for a specific stock, use the following command:
 
-## Running the Bot
+\```bash
+./moneybot.py AAPL
+\```
 
-To run the bot, execute the following command:
+Replace `AAPL` with the ticker symbol of the stock you want to analyze.
 
-```bash
-python cli.py SYMBOL
-```
-Replace `SYMBOL` with the stock you want to analyze.
+## Components
 
+### Financial Data Fetcher
+
+The `FinancialDataFetcher` class is responsible for fetching real-time and historical financial data for a given stock ticker using Yahoo Finance.
+
+### Sentiment Analysis
+
+The bot uses the `AdvancedSentimentAnalyzer` class to analyze sentiment from news articles and Reddit posts. It calculates a sentiment score that influences the trading decision.
+
+### News Fetching
+
+The script includes functionality to fetch news from various sources:
+- **RedditNewsFetcher**: Searches Reddit for the largest relevant subreddit and fetches the latest posts.
+- **GDELTFetcher**: Fetches global and market-related news using the GDELT API.
+
+### Stock Evaluation
+
+The `Stock` class consolidates all functionality:
+- **fetch_historical_data**: Fetches historical closing prices for the stock.
+- **fetch_news**: Retrieves relevant news from Reddit.
+- **fetch_world_news**: Fetches broader market and world news using GDELT.
+- **calculate_sentiment_score**: Analyzes the sentiment of the collected news.
+- **calculate_technical_score**: Analyzes the historical data to determine the stock's technical score.
+- **calculate_overall_reliability**: Computes an overall reliability score based on sentiment and technical analysis.
+- **evaluate**: Combines all the collected data and scores to make a final trading decision (Buy, Sell, Hold).
+
+The `evaluate` method in the `Stock` class automatically performs all the necessary data fetching and analysis steps, providing a final recommendation based on pre-configured thresholds.
+
+## Contributing
+
+Contributions are welcome! To contribute:
+1. Fork the repository.
+2. Create a new branch: \```git checkout -b feature-branch-name\```
+3. Make your changes and commit them: \```git commit -m 'Add some feature'\```
+4. Push to the branch: \```git push origin feature-branch-name\```
+5. Submit a pull request.
+
+Please ensure your code adheres to the project's coding standards and includes relevant documentation.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
