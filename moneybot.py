@@ -9,12 +9,16 @@ from news import RedditNewsFetcher, GDELTFetcher
 from sentiment import AdvancedSentimentAnalyzer
 
 def get_symbol(symbol):
-    url = f"http://d.yimg.com/autoc.finance.yahoo.com/autoc?query={symbol}&region=1&lang=en"
     try:
-        result = requests.get(url).json()
-        for x in result['ResultSet']['Result']:
+        # Fetch the list of companies matching the symbol
+        symbol_list = requests.get(f"http://chstocksearch.herokuapp.com/api/{symbol}").json()
+        
+        # Search for the exact match in the list
+        for x in symbol_list:
             if x['symbol'] == symbol.upper():
-                return x['name']
+                return x['company']
+        logging.warning(f"No exact match found for symbol: {symbol}. Returning symbol as fallback.")
+        return symbol  # Fallback to the symbol itself if the company name can't be fetched
     except Exception as e:
         logging.error(f"Error fetching company name for {symbol}: {e}")
         return symbol  # Fallback to the symbol itself if the company name can't be fetched
