@@ -1,9 +1,9 @@
 # Configuration file for API keys and global settings
 
 API_KEYS = {
-    'reddit_client_id': 'Up2_w6L851Kg_PsN_KJpWA',  # Replace with your Reddit client ID
-    'reddit_client_secret': 'bmM2To0THTLo_zL8FuHXUUfDjAcdqg',  # Replace with your Reddit client secret
-    'reddit_user_agent': 'My_Reddit_Bot -armand0e',  # Replace with your Reddit user agent
+    'reddit_client_id': 'your_reddit_client_id_here',  # Replace with your Reddit client ID
+    'reddit_client_secret': 'your_reddit_client_secret_here',  # Replace with your Reddit client secret
+    'reddit_user_agent': 'your_user_agent_here',  # Replace with your Reddit user agent
 }
 
 SETTINGS = {
