@@ -4,11 +4,9 @@ import requests
 import numpy as np
 import yfinance as yf
 import praw
+import scipy as sc
 from transformers import pipeline
 import config
-
-def normalize_score(score, score_min, score_max):
-        return (score - score_min) / (score_max - score_min)
 
 class Stock:
     def __init__(self, ticker):
@@ -175,6 +173,7 @@ class Stock:
             weighted_average_score = sum(scores) / len(scores) if scores else 0
             weighted_avg_stds = np.std(scores) if scores else 0
             reliability = max(0, 100 - (weighted_avg_stds * 100))
+            logging.debug(f"{scores}")
             return weighted_average_score, reliability
         except Exception as e:
             logging.error(f"Error analyzing {model_type} sentiment: {e}")
