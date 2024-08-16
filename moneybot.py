@@ -7,9 +7,17 @@ import yfinance as yf
 from news import RedditNewsFetcher, GDELTFetcher
 from sentiment import AdvancedSentimentAnalyzer
 
-def get_company_name(symbol):
-    pass
-
+def get_company_name(symbol: str) -> str:
+    try:
+        stock = yf.Ticker(symbol)
+        company_name = stock.info.get('shortName')
+        if company_name:
+            return company_name
+        else:
+            return "Unknown Company"
+    except Exception as e:
+        logging.error(f"Error fetching company name for {symbol}: {e}")
+        return "Unknown Company"
 
 class FinancialDataFetcher:
     def __init__(self, ticker):
@@ -43,12 +51,13 @@ class Stock:
     def __init__(self, ticker, company_name):
         self.ticker = ticker
         self.company_name = company_name
-        self.sentiment_score = None
-        self.sentiment_reliability = None
+        self.sentiment_score_company = None
+        self.sentiment_reliability_company = None
+        self.sentiment_score_market = None
+        self.sentiment_reliability_market = None
         self.technical_score = None
         self.technical_reliability = None
         self.news = []
-        self.historical_data = []
         self.market_news = []
         self.overall_reliability = None
 
@@ -60,73 +69,104 @@ class Stock:
         else:
             logging.info(f"Historical data for {self.ticker} fetched successfully")
 
+
     def fetch_news(self):
         reddit_fetcher = RedditNewsFetcher(self.company_name)
-        self.news = reddit_fetcher.fetch_reddit_news()
-        logging.info(f"News for {self.company_name} fetched successfully")
+        gdelt_fetcher = GDELTFetcher(self.company_name)
+        
+        self.news = reddit_fetcher.fetch_reddit_news() + gdelt_fetcher.fetch_company_news()
+        self.market_news = gdelt_fetcher.fetch_market_news()
 
-    def fetch_world_news(self):
-        gdelt_fetcher = GDELTFetcher()
-        self.market_news = gdelt_fetcher.fetch_gdelt_news()
-        logging.info(f"Market news related to world events fetched successfully")
+        if not self.news:
+            logging.warning(f"No company-specific news found for {self.company_name} ({self.ticker})")
+        if not self.market_news:
+            logging.warning(f"No market news found for {self.ticker}")
 
     def calculate_sentiment_score(self):
         adv_sentiment_analyzer = AdvancedSentimentAnalyzer()
-        self.sentiment_score, self.sentiment_reliability = adv_sentiment_analyzer.analyze_sentiment(self.news)
-        logging.info(f"Sentiment score for {self.ticker}: {self.sentiment_score}")
-        logging.info(f"Sentiment reliability for {self.ticker}: {self.sentiment_reliability}%")
+        
+        if self.news:
+            self.sentiment_score_company, self.sentiment_reliability_company = adv_sentiment_analyzer.analyze_sentiment(self.news)
+        else:
+            logging.error(f"No news data available to analyze company sentiment for {self.ticker}.")
+            self.sentiment_score_company, self.sentiment_reliability_company = 0, 0
+        
+        if self.market_news:
+            self.sentiment_score_market, self.sentiment_reliability_market = adv_sentiment_analyzer.analyze_sentiment(self.market_news)
+        else:
+            logging.error(f"No market news data available to analyze market sentiment for {self.ticker}.")
+            self.sentiment_score_market, self.sentiment_reliability_market = 0, 0
 
     def calculate_technical_score(self):
-        if not self.historical_data or len(self.historical_data) < 2:
+        if not self.historical_data or len(self.historical_data) < 14:  # Need at least 14 data points for RSI
             logging.error(f"Not enough historical data to calculate technical score for {self.ticker}.")
             self.technical_score = 0
             self.technical_reliability = 0
             return
+        
+        # Calculate Simple Moving Average (SMA)
+        sma_period = 14
+        sma = np.mean(self.historical_data[-sma_period:])
+        
+        # Calculate Relative Strength Index (RSI)
+        delta = np.diff(self.historical_data)
+        gain = np.where(delta > 0, delta, 0)
+        loss = np.where(delta < 0, -delta, 0)
 
-        self.technical_score = sum(self.historical_data) / len(self.historical_data) if self.historical_data else 0
-        try:
-            self.technical_reliability = max(0, 100 - (np.std(self.historical_data, ddof=1) * 100))
-        except Exception as e:
-            logging.error(f"Error calculating standard deviation for {self.ticker}: {e}")
-            self.technical_reliability = 0
+        avg_gain = np.mean(gain[-sma_period:])
+        avg_loss = np.mean(loss[-sma_period:])
+
+        if avg_loss == 0:
+            rsi = 100
+        else:
+            rs = avg_gain / avg_loss
+            rsi = 100 - (100 / (1 + rs))
+        
+        # Technical Score Calculation (can be a combination of indicators)
+        self.technical_score = (sma + rsi) / 2
+        
+        # Technical Reliability (we keep it simple for now)
+        self.technical_reliability = max(0, 100 - np.std(self.historical_data))
 
         logging.info(f"Technical score for {self.ticker}: {self.technical_score}")
         logging.info(f"Technical reliability for {self.ticker}: {self.technical_reliability}%")
-
-    def calculate_overall_reliability(self):
-        self.overall_reliability = (self.sentiment_reliability + self.technical_reliability) / 2
-        logging.info(f"Overall reliability for {self.ticker}: {self.overall_reliability}%")
 
     def evaluate(self):
         # Fetch and calculate all necessary data
         self.fetch_historical_data()
         self.fetch_news()
-        self.fetch_world_news()
         self.calculate_sentiment_score()
         self.calculate_technical_score()
-        self.calculate_overall_reliability()
 
-        logging.info("Evaluating stock based on historical data, sentiment, and overall reliability")
+        logging.info(f"Technical score: {self.technical_score}, Technical reliability: {self.technical_reliability}%")
+        logging.info(f"Company sentiment score: {self.sentiment_score_company}, Reliability: {self.sentiment_reliability_company}%")
+        logging.info(f"Market sentiment score: {self.sentiment_score_market}, Reliability: {self.sentiment_reliability_market}%")
 
-        # Ensure historical data is available
-        if not self.historical_data:
-            logging.error("Historical data is empty. Unable to evaluate stock.")
-            return "Hold"
+        # Weighing technical score, company sentiment, and market sentiment
+        overall_score = (
+            self.technical_score * 0.4 + 
+            self.sentiment_score_company * 0.3 + 
+            self.sentiment_score_market * 0.3
+        )
+        overall_reliability = (
+            self.technical_reliability * 0.4 + 
+            self.sentiment_reliability_company * 0.3 + 
+            self.sentiment_reliability_market * 0.3
+        )
+        
+        self.overall_reliability = overall_reliability
 
-        # Calculate the average price
-        avg_price = sum(self.historical_data) / len(self.historical_data)
-        logging.info(f"Average historical price: {avg_price}")
-        logging.info(f"Sentiment score: {self.sentiment_score}")
         logging.info(f"Overall reliability: {self.overall_reliability}%")
+        logging.info(f"Overall score: {overall_score}")
 
-        # Use thresholds from config
-        if self.overall_reliability < config.SETTINGS['reliability_threshold']:
+        # Decision based on thresholds
+        if overall_reliability < config.SETTINGS['reliability_threshold']:
             logging.warning("Low reliability score. Decision: Hold")
             return "Hold"
         
-        if avg_price > 105 and self.sentiment_score > config.SETTINGS['buy_threshold']:
+        if overall_score > config.SETTINGS['buy_threshold']:
             return "Buy"
-        elif avg_price < 95 and self.sentiment_score < config.SETTINGS['sell_threshold']:
+        elif overall_score < config.SETTINGS['sell_threshold']:
             return "Sell"
         else:
             return "Hold"
@@ -143,18 +183,8 @@ def main(stock_symbol):
 
     # Log and print the final decision
     logging.info(f"Final decision for {stock_symbol}: {decision}")
-    print(f"Trading decision for {stock_symbol}: {decision}")
+    print(f"Final decision for {stock_symbol}: {decision}")
 
 if __name__ == "__main__":
-    import argparse
-
-    # Set up argument parsing for the stock symbol
-    parser = argparse.ArgumentParser(description="Run the trading bot for a specific stock.")
-    parser.add_argument("symbol", help="Stock symbol to analyze")
-    args = parser.parse_args()
-
-    # Configure logging level
-    logging.basicConfig(level=config.SETTINGS['logging_level'])
-
-    # Run the main function with the provided stock symbol
-    main(args.symbol)
+    stock_symbol = input("Enter the stock ticker symbol: ").upper()
+    main(stock_symbol)
