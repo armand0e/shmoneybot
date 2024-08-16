@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
-
+import config
 import logging
 import requests
 import numpy as np
 import yfinance as yf
-import config
 from news import RedditNewsFetcher, GDELTFetcher
 from sentiment import AdvancedSentimentAnalyzer
 
-def get_symbol(symbol):
-    try:
-        # Fetch the list of companies matching the symbol
-        symbol_list = requests.get(f"http://chstocksearch.herokuapp.com/api/{symbol}").json()
-        
-        # Search for the exact match in the list
-        for x in symbol_list:
-            if x['symbol'] == symbol.upper():
-                return x['company']
-        logging.warning(f"No exact match found for symbol: {symbol}. Returning symbol as fallback.")
-        return symbol  # Fallback to the symbol itself if the company name can't be fetched
-    except Exception as e:
-        logging.error(f"Error fetching company name for {symbol}: {e}")
-        return symbol  # Fallback to the symbol itself if the company name can't be fetched
+def get_company_name(symbol):
+    pass
+
 
 class FinancialDataFetcher:
     def __init__(self, ticker):
@@ -135,7 +123,7 @@ class Stock:
         if self.overall_reliability < config.SETTINGS['reliability_threshold']:
             logging.warning("Low reliability score. Decision: Hold")
             return "Hold"
-
+        
         if avg_price > 105 and self.sentiment_score > config.SETTINGS['buy_threshold']:
             return "Buy"
         elif avg_price < 95 and self.sentiment_score < config.SETTINGS['sell_threshold']:
@@ -145,7 +133,7 @@ class Stock:
 
 def main(stock_symbol):
     # Fetch the company name using the get_symbol function
-    company_name = get_symbol(stock_symbol)
+    company_name = get_company_name(stock_symbol)
 
     # Initialize the Stock object
     stock = Stock(stock_symbol, company_name)

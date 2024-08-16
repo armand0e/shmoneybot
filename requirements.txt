@@ -1,0 +1,7 @@
+yfinance
+requests
+praw
+transformers
+numpy
+logging
+beautifulsoup4
