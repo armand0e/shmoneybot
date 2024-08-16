@@ -1,24 +1,41 @@
 #!/usr/bin/env python3
-
+import config
 import logging
 import requests
 import numpy as np
 import yfinance as yf
-import config
+from bs4 import BeautifulSoup
 from news import RedditNewsFetcher, GDELTFetcher
 from sentiment import AdvancedSentimentAnalyzer
 
 def get_symbol(symbol):
     try:
-        # Fetch the list of companies matching the symbol
-        symbol_list = requests.get(f"http://chstocksearch.herokuapp.com/api/{symbol}").json()
+        # Construct the Google search URL
+        search_url = f"https://www.google.com/search?q={symbol}"
+
+        # Set headers to mimic a browser request
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+        # Make the request to Google
+        response = requests.get(search_url, headers=headers)
+        response.raise_for_status()
+
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Find the div with data-attrid="title"
+        company_div = soup.find("div", {"data-attrid": "title"})
         
-        # Search for the exact match in the list
-        for x in symbol_list:
-            if x['symbol'] == symbol.upper():
-                return x['company']
-        logging.warning(f"No exact match found for symbol: {symbol}. Returning symbol as fallback.")
-        return symbol  # Fallback to the symbol itself if the company name can't be fetched
+        # Extract and return the company name text
+        if company_div:
+            company_name = company_div.get_text()
+            logging.info(f"Company name found for symbol {symbol}: {company_name}")
+            return company_name
+        else:
+            logging.warning(f"No company name found for symbol {symbol}. Returning symbol as fallback.")
+            return symbol
     except Exception as e:
         logging.error(f"Error fetching company name for {symbol}: {e}")
         return symbol  # Fallback to the symbol itself if the company name can't be fetched
