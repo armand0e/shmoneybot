@@ -8,7 +8,7 @@ API_KEYS = {
 
 SETTINGS = {
     'historical_data_length': '1y',  # Default length for historical data (1 year)
-    'reddit_posts_limit': 50,        # Max number of Reddit posts to fetch
+    'reddit_posts_limit': 100,        # Max number of Reddit posts to fetch
     'global_market_keywords': [
         'inflation', 'CPI', 'Federal Reserve', 'interest rates', 'unemployment', 'GDP',
         'economic growth', 'geopolitical risk', 'war', 'Israel', 'Middle East', 'global markets',
@@ -20,7 +20,7 @@ SETTINGS = {
     'sell_threshold': -0.2,          # Overall score threshold to consider selling
     'logging_level': 'INFO',         # Logging level (e.g., DEBUG, INFO, WARNING, ERROR)
     'sentiment_model_name': 'distilbert-base-uncased-finetuned-sst-2-english',  # Sentiment analysis model
-    'sentiment_max_length': 512,     # Max length for sentiment analysis inputs
+    'sentiment_max_length': 2048,     # Max length for sentiment analysis inputs
     'use_gpu': False,                # Whether to use GPU for sentiment analysis (set to True if GPU is available)
 }
 
