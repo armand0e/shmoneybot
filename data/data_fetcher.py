@@ -1,86 +1,45 @@
+
 import yfinance as yf
-import tweepy
-import praw
-from utils.logger import get_logger
+import logging
 
-logger = get_logger('DataFetcher')
+logger = logging.getLogger('DataFetcher')
 
-class DataFetcher:
-    def __init__(self, twitter_api_keys, reddit_api_keys):
-        self.twitter_api = self._init_twitter(twitter_api_keys)
-        self.reddit_api = self._init_reddit(reddit_api_keys)
-        logger.info("DataFetcher initialized")
+class FinancialDataFetcher:
+    def __init__(self, historical_data_length="5y"):
+        self.historical_data_length = historical_data_length
+        logger.info("FinancialDataFetcher initialized")
 
-    def _init_twitter(self, api_keys):
-        auth = tweepy.OAuthHandler(api_keys['api_key'], api_keys['api_secret'])
-        auth.set_access_token(api_keys['access_token'], api_keys['access_secret'])
-        return tweepy.API(auth, wait_on_rate_limit=True)
-
-    def _init_reddit(self, api_keys):
-        return praw.Reddit(
-            client_id=api_keys['client_id'],
-            client_secret=api_keys['client_secret'],
-            user_agent=api_keys['user_agent']
-        )
-
-    def fetch_stock_data(self, ticker):
+    def fetch_real_time_data(self, ticker):
         try:
             stock = yf.Ticker(ticker)
-            stock_data = {
-                'ticker': ticker,
-                'info': stock.info,
-                'history': stock.history(period="5y"),
-                'income_statement': stock.income_stmt,
-                'balance_sheet': stock.balance_sheet,
-                'financials': stock.financials,
-                'cashflow': stock.cashflow,
-            }
-            logger.info(f"Fetched stock data for {ticker}")
-            return stock_data
+            real_time_data = stock.info
+            logger.info(f"Fetched real-time data for {ticker}")
+            return real_time_data
         except Exception as e:
-            logger.error(f"Failed to fetch data for {ticker}: {str(e)}")
+            logger.error(f"Failed to fetch real-time data for {ticker}: {str(e)}")
             return None
 
-    def fetch_social_media_data(self, ticker):
+    def fetch_historical_data(self, ticker):
         try:
-            reddit_posts = self._fetch_reddit_posts(ticker)
-            twitter_posts = self._fetch_twitter_posts(ticker)
-            social_data = reddit_posts + twitter_posts
-            if not social_data:
-                logger.warning(f"No social media data found for {ticker}")
-            logger.info(f"Fetched social media data for {ticker}")
-            return social_data
+            stock = yf.Ticker(ticker)
+            historical_data = stock.history(period=self.historical_data_length)
+            logger.info(f"Fetched historical data for {ticker}")
+            return historical_data
         except Exception as e:
-            logger.error(f"Failed to fetch social media data for {ticker}: {str(e)}")
-            return []
+            logger.error(f"Failed to fetch historical data for {ticker}: {str(e)}")
+            return None
 
-    def _fetch_reddit_posts(self, ticker):
-        try:
-            subreddit_name = self._find_subreddit(ticker)
-            if subreddit_name:
-                subreddit = self.reddit_api.subreddit(subreddit_name)
-                posts = [post.title for post in subreddit.hot(limit=20)]
-                logger.debug(f"Fetched {len(posts)} Reddit posts for {ticker}")
-                return posts
-            else:
-                logger.warning(f"No relevant subreddit found for {ticker}")
-                return []
-        except Exception as e:
-            logger.error(f"Failed to fetch Reddit posts for {ticker}: {str(e)}")
-            return []
+    def fetch_financial_data(self, ticker):
+        real_time_data = self.fetch_real_time_data(ticker)
+        historical_data = self.fetch_historical_data(ticker)
 
-    def _fetch_twitter_posts(self, ticker):
-        try:
-            query = f'{ticker} -filter:retweets'
-            tweets = tweepy.Cursor(self.twitter_api.search_tweets, q=query, tweet_mode='extended', lang='en').items(20)
-            posts = [tweet.full_text for tweet in tweets]
-            logger.debug(f"Fetched {len(posts)} Twitter posts for {ticker}")
-            return posts
-        except Exception as e:
-            logger.error(f"Failed to fetch Twitter posts for {ticker}: {str(e)}")
-            return []
-
-    def _find_subreddit(self, ticker):
-        return ticker.lower()
-
-logger.info("DataFetcher module initialized")
+        if real_time_data and historical_data:
+            financial_data = {
+                'ticker': ticker,
+                'info': real_time_data,
+                'history': historical_data
+            }
+            return financial_data
+        else:
+            logger.warning(f"Incomplete financial data for {ticker}")
+            return None

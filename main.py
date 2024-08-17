@@ -1,14 +1,11 @@
-import json
-from data.data_fetcher import DataFetcher
-from data.news_fetcher import NewsFetcher
-from data.database import Database
-from models.sentiment_model import SentimentModel
-from models.technical_model import TechnicalModel
-from strategies.trading_strategy import TradingStrategy
-from strategies.risk_management import RiskManager
-from utils.logger import get_logger
 
-logger = get_logger('Main')
+import json
+import logging
+from data_fetcher import FinancialDataFetcher
+from news_fetcher import RedditNewsFetcher, GDELTFetcher
+from sentiment_model import AdvancedSentimentAnalyzer
+
+logger = logging.getLogger('Main')
 
 def load_config(config_file='config.json'):
     try:
@@ -26,26 +23,36 @@ def load_config(config_file='config.json'):
 def main():
     config = load_config()
 
-    data_fetcher = DataFetcher(config['twitter_api_keys'], config['reddit_api_keys'])
-    news_fetcher = NewsFetcher(config['gnews_api_key'])
-    database = Database()
-    sentiment_model = SentimentModel(config['model_paths']['sentiment_model'])
-    technical_model = TechnicalModel()
-    risk_manager = RiskManager()
-    trading_strategy = TradingStrategy(sentiment_model, technical_model, risk_manager)
+    # Initialize components with config values
+    data_fetcher = FinancialDataFetcher(historical_data_length=config['historical_data_length'])
+    reddit_fetcher = RedditNewsFetcher(config['reddit_api_keys'], posts_limit=config['reddit_posts_limit'])
+    gdelt_fetcher = GDELTFetcher(config['gnews_api_key'])
+    sentiment_analyzer = AdvancedSentimentAnalyzer(
+        model_name=config['sentiment_analysis']['model_name'],
+        device=config['sentiment_analysis']['device'],
+        max_length=config['sentiment_analysis']['max_length']
+    )
 
+    # Process each ticker in the config
     for ticker in config['tickers']:
         logger.info(f"Processing ticker: {ticker}")
-        stock_data = data_fetcher.fetch_stock_data(ticker)
-        logger.debug(f"Stock data for {ticker}: {stock_data}")
-        social_data = data_fetcher.fetch_social_media_data(ticker)
-        logger.debug(f"Social data for {ticker}: {social_data}")
 
-        if stock_data and social_data:
-            if trading_strategy.evaluate_stock(stock_data, social_data):
-                trading_strategy.execute_trade(ticker, config['investment_amount'], config['portfolio_value'])
-        else:
-            logger.warning(f"Failed to fetch data for ticker: {ticker}")
+        # Fetch financial data
+        financial_data = data_fetcher.fetch_financial_data(ticker)
+        if not financial_data:
+            logger.warning(f"Skipping {ticker} due to missing financial data")
+            continue
+
+        # Fetch and analyze social media data
+        reddit_posts = reddit_fetcher.fetch_reddit_posts(ticker)
+        sentiment_score, reliability = sentiment_analyzer.analyze_sentiment(reddit_posts)
+
+        if sentiment_score is not None:
+            logger.info(f"Ticker {ticker}: Sentiment Score: {sentiment_score}, Reliability: {reliability}")
+
+        # Fetch global market news
+        global_news = gdelt_fetcher.fetch_news(config['global_market_keywords'])
+        logger.debug(f"Global market news: {global_news}")
 
     logger.info("Completed processing all tickers.")
 
