@@ -2,3 +2,53 @@
 2024-08-17 02:13:48,100 - TechnicalModel - INFO - TechnicalModel module initialized
 2024-08-17 02:20:17,547 - TechnicalModel - INFO - TechnicalModel module initialized
 2024-08-17 02:21:48,660 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:24:14,167 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:26:40,339 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:27:15,771 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:29:59,717 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:31:38,749 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:31:41,243 - TechnicalModel - INFO - Technical analysis completed with score -1.1102230246251565e-16 and reliability 81.85740559592337
+2024-08-17 02:32:12,156 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:32:14,665 - TechnicalModel - INFO - Technical analysis completed with score 2.220446049250313e-16 and reliability 81.85740454098307
+2024-08-17 02:33:28,142 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:34:42,872 - TechnicalModel - INFO - TechnicalModel module initialized
+2024-08-17 02:45:09,815 - TechnicalModel - DEBUG - RSI calculated: 53.715398393110284
+2024-08-17 02:45:09,816 - TechnicalModel - DEBUG - SMA calculated: 217.43020847865515
+2024-08-17 02:45:09,816 - TechnicalModel - DEBUG - Combined technical scores: [53.715398393110284, 217.43020847865515]
+2024-08-17 02:45:09,816 - TechnicalModel - INFO - Technical analysis completed with score 0.0 and reliability 81.85740504277243
+2024-08-17 02:45:11,249 - TechnicalModel - DEBUG - RSI calculated: 53.33243037281472
+2024-08-17 02:45:11,249 - TechnicalModel - DEBUG - SMA calculated: 409.7944575718471
+2024-08-17 02:45:11,249 - TechnicalModel - DEBUG - Combined technical scores: [53.33243037281472, 409.7944575718471]
+2024-08-17 02:45:11,250 - TechnicalModel - INFO - Technical analysis completed with score 0.0 and reliability 178.2310135995162
+2024-08-17 02:45:46,175 - TechnicalModel - DEBUG - RSI calculated: 53.71539891293713
+2024-08-17 02:45:46,175 - TechnicalModel - DEBUG - SMA calculated: 217.43020847865515
+2024-08-17 02:45:46,175 - TechnicalModel - DEBUG - Combined technical scores: [53.71539891293713, 217.43020847865515]
+2024-08-17 02:45:46,175 - TechnicalModel - INFO - Technical analysis completed with score -2.220446049250313e-16 and reliability 81.857404782859
+2024-08-17 02:45:47,597 - TechnicalModel - DEBUG - RSI calculated: 53.33242819446794
+2024-08-17 02:45:47,597 - TechnicalModel - DEBUG - SMA calculated: 409.7944575718471
+2024-08-17 02:45:47,597 - TechnicalModel - DEBUG - Combined technical scores: [53.33242819446794, 409.7944575718471]
+2024-08-17 02:45:47,597 - TechnicalModel - INFO - Technical analysis completed with score 0.0 and reliability 178.23101468868958
+2024-08-17 02:47:09,309 - TechnicalModel - DEBUG - RSI calculated: 53.71539823953574
+2024-08-17 02:47:09,310 - TechnicalModel - DEBUG - SMA calculated: 217.43020847865515
+2024-08-17 02:47:09,310 - TechnicalModel - DEBUG - Combined technical scores: [53.71539823953574, 217.43020847865515]
+2024-08-17 02:47:09,310 - TechnicalModel - INFO - Technical analysis completed with score 0.0 and reliability 81.8574051195597
+2024-08-17 02:47:10,708 - TechnicalModel - DEBUG - RSI calculated: 53.332429579629576
+2024-08-17 02:47:10,708 - TechnicalModel - DEBUG - SMA calculated: 409.7944575718471
+2024-08-17 02:47:10,708 - TechnicalModel - DEBUG - Combined technical scores: [53.332429579629576, 409.7944575718471]
+2024-08-17 02:47:10,708 - TechnicalModel - INFO - Technical analysis completed with score -5.551115123125783e-17 and reliability 178.23101399610877
+2024-08-17 02:47:57,375 - TechnicalModel - DEBUG - RSI calculated: 53.71539639970821
+2024-08-17 02:47:57,375 - TechnicalModel - DEBUG - SMA calculated: 217.43020847865515
+2024-08-17 02:47:57,375 - TechnicalModel - DEBUG - Combined technical scores: [53.71539639970821, 217.43020847865515]
+2024-08-17 02:47:57,375 - TechnicalModel - INFO - Technical analysis completed with score -1.1102230246251565e-16 and reliability 81.85740603947346
+2024-08-17 02:47:58,807 - TechnicalModel - DEBUG - RSI calculated: 53.332428040518266
+2024-08-17 02:47:58,808 - TechnicalModel - DEBUG - SMA calculated: 409.7944575718471
+2024-08-17 02:47:58,808 - TechnicalModel - DEBUG - Combined technical scores: [53.332428040518266, 409.7944575718471]
+2024-08-17 02:47:58,808 - TechnicalModel - INFO - Technical analysis completed with score 0.0 and reliability 178.2310147656644
+2024-08-17 02:48:46,967 - TechnicalModel - DEBUG - RSI calculated: 53.71539808321046
+2024-08-17 02:48:46,967 - TechnicalModel - DEBUG - SMA calculated: 217.43020847865515
+2024-08-17 02:48:46,968 - TechnicalModel - DEBUG - Combined technical scores: [53.71539808321046, 217.43020847865515]
+2024-08-17 02:48:46,968 - TechnicalModel - INFO - Technical analysis completed with score -2.220446049250313e-16 and reliability 81.85740519772234
+2024-08-17 02:48:48,362 - TechnicalModel - DEBUG - RSI calculated: 53.332428336482586
+2024-08-17 02:48:48,362 - TechnicalModel - DEBUG - SMA calculated: 409.7944575718471
+2024-08-17 02:48:48,362 - TechnicalModel - DEBUG - Combined technical scores: [53.332428336482586, 409.7944575718471]
+2024-08-17 02:48:48,362 - TechnicalModel - INFO - Technical analysis completed with score 1.1102230246251565e-16 and reliability 178.23101461768223

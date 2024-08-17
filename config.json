@@ -11,10 +11,9 @@
         "user_agent": "moneybot -armand0e"
     },
     "gnews_api_key": "921bcdbe88d2d59112ddc7388a7da368",
-    "tickers": ["AAPL", "MSFT", "GOOGL"],
+   "tickers": ["AAPL", "MSFT", "GOOGL"],
     "model_paths": {
-        "sentiment_model": "models/sentiment_model.h5",
-        "technical_model": "models/technical_model.h5"
+        "sentiment_model": "distilbert-base-uncased-finetuned-sst-2-english"
     },
     "portfolio_value": 100000,
     "investment_amount": 1000

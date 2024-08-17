@@ -5,9 +5,6 @@ from utils.logger import get_logger
 logger = get_logger('TechnicalModel')
 
 class TechnicalModel:
-    def __init__(self):
-        pass  # No need for complex initialization
-
     def analyze_technical(self, stock_data):
         try:
             rsi = self._calculate_rsi(stock_data['history'])
@@ -22,20 +19,32 @@ class TechnicalModel:
             return None, None
 
     def _calculate_rsi(self, history):
-        delta = history['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).mean()
-        loss = (-delta.where(delta < 0, 0)).mean()
-        rs = gain / loss if loss != 0 else 0
-        rsi = 100 - (100 / (1 + rs))
-        logger.debug(f"RSI calculated: {rsi}")
-        return rsi
+        try:
+            delta = history['Close'].diff()
+            gain = (delta.where(delta > 0, 0)).mean()
+            loss = (-delta.where(delta < 0, 0)).mean()
+            rs = gain / loss if loss != 0 else 0
+            rsi = 100 - (100 / (1 + rs))
+            logger.debug(f"RSI calculated: {rsi}")
+            return rsi
+        except Exception as e:
+            logger.error(f"Failed to calculate RSI: {str(e)}")
+            return None
 
     def _calculate_sma(self, history, period=14):
-        sma = history['Close'].rolling(window=period).mean().iloc[-1]
-        logger.debug(f"SMA calculated: {sma}")
-        return sma
+        try:
+            sma = history['Close'].rolling(window=period).mean().iloc[-1]
+            logger.debug(f"SMA calculated: {sma}")
+            return sma
+        except Exception as e:
+            logger.error(f"Failed to calculate SMA: {str(e)}")
+            return None
 
     def _combine_technical_scores(self, rsi, sma):
-        return [rsi, sma]
-
-logger.info("TechnicalModel module initialized")
+        try:
+            combined_scores = [rsi, sma]
+            logger.debug(f"Combined technical scores: {combined_scores}")
+            return combined_scores
+        except Exception as e:
+            logger.error(f"Failed to combine technical scores: {str(e)}")
+            return []

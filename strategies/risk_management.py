@@ -7,9 +7,9 @@ class RiskManager:
         self.max_stock_allocation = max_stock_allocation
         self.max_sector_allocation = max_sector_allocation
         self.portfolio = {}  # This should be managed with a database or similar in production
+        logger.info("RiskManager initialized")
 
     def is_viable(self, score):
-        # Placeholder for risk-based evaluation of stock viability
         logger.debug(f"Evaluating stock viability with score {score}")
         return score >= 0.5  # Example threshold for viability
 

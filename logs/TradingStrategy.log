@@ -2,3 +2,26 @@
 2024-08-17 02:13:48,101 - TradingStrategy - INFO - TradingStrategy module initialized
 2024-08-17 02:20:17,547 - TradingStrategy - INFO - TradingStrategy module initialized
 2024-08-17 02:21:48,661 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:24:14,170 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:26:40,345 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:27:15,773 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:29:59,719 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:31:38,751 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:32:12,158 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:33:28,144 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:34:42,874 - TradingStrategy - INFO - TradingStrategy module initialized
+2024-08-17 02:45:07,539 - TradingStrategy - INFO - TradingStrategy initialized
+2024-08-17 02:45:09,816 - TradingStrategy - INFO - Evaluated stock AAPL with overall score 0.125
+2024-08-17 02:45:11,250 - TradingStrategy - INFO - Evaluated stock MSFT with overall score 0.23076923076923078
+2024-08-17 02:45:44,004 - TradingStrategy - INFO - TradingStrategy initialized
+2024-08-17 02:45:46,175 - TradingStrategy - INFO - Evaluated stock AAPL with overall score 0.12499999999999989
+2024-08-17 02:45:47,597 - TradingStrategy - INFO - Evaluated stock MSFT with overall score 0.23076923076923078
+2024-08-17 02:47:07,131 - TradingStrategy - INFO - TradingStrategy initialized
+2024-08-17 02:47:09,310 - TradingStrategy - INFO - Evaluated stock AAPL with overall score 0.125
+2024-08-17 02:47:10,708 - TradingStrategy - INFO - Evaluated stock MSFT with overall score 0.23076923076923075
+2024-08-17 02:47:55,121 - TradingStrategy - INFO - TradingStrategy initialized
+2024-08-17 02:47:57,375 - TradingStrategy - INFO - Evaluated stock AAPL with overall score 0.12499999999999994
+2024-08-17 02:47:58,808 - TradingStrategy - INFO - Evaluated stock MSFT with overall score 0.23076923076923078
+2024-08-17 02:48:44,769 - TradingStrategy - INFO - TradingStrategy initialized
+2024-08-17 02:48:46,968 - TradingStrategy - INFO - Evaluated stock AAPL with overall score 0.12499999999999989
+2024-08-17 02:48:48,362 - TradingStrategy - INFO - Evaluated stock MSFT with overall score 0.23076923076923084
