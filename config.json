@@ -1,0 +1,21 @@
+{
+    "twitter_api_keys": {
+        "api_key": "your_twitter_api_key",
+        "api_secret": "your_twitter_api_secret",
+        "access_token": "your_access_token",
+        "access_secret": "your_access_secret"
+    },
+    "reddit_api_keys": {
+        "client_id": "Up2_w6L851Kg_PsN_KJpWA",
+        "client_secret": "bmM2To0THTLo_zL8FuHXUUfDjAcdqg",
+        "user_agent": "moneybot -armand0e"
+    },
+    "gnews_api_key": "921bcdbe88d2d59112ddc7388a7da368",
+    "tickers": ["AAPL", "MSFT", "GOOGL"],
+    "model_paths": {
+        "sentiment_model": "models/sentiment_model.h5",
+        "technical_model": "models/technical_model.h5"
+    },
+    "portfolio_value": 100000,
+    "investment_amount": 1000
+}

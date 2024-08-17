@@ -1,0 +1,7 @@
+2024-08-17 12:00:02,000 - SentimentModel - INFO - Sentiment model loaded
+2024-08-17 02:12:49,178 - SentimentModel - ERROR - Failed to load sentiment model: [Errno 2] Unable to open file (unable to open file: name = 'models/sentiment_model.h5', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0)
+2024-08-17 02:13:48,287 - SentimentModel - ERROR - Failed to load sentiment model: [Errno 2] Unable to open file (unable to open file: name = 'models/sentiment_model.h5', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0)
+2024-08-17 02:20:17,782 - SentimentModel - ERROR - Failed to load Hugging Face model: models/sentiment_model.h5 is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `huggingface-cli login` or by passing `token=<your_token>`
+2024-08-17 02:21:48,911 - SentimentModel - ERROR - Failed to load Hugging Face model: models/sentiment_model.h5 is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `huggingface-cli login` or by passing `token=<your_token>`

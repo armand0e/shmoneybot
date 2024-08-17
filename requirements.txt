@@ -1,7 +1,11 @@
-yfinance
-requests
-praw
 transformers
+torch
 numpy
+scipy
+yfinance
+tweepy
+praw
+pandas
+SQLAlchemy
 logging
-beautifulsoup4
+config
