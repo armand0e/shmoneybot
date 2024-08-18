@@ -1,9 +1,18 @@
-
 import json
 import logging
 from data_fetcher import FinancialDataFetcher
 from news_fetcher import RedditNewsFetcher, GDELTFetcher
 from sentiment_model import AdvancedSentimentAnalyzer
+from scipy.stats import zscore
+
+def evaluate_stock_viability(sentiment_score, outlook_score, sentiment_threshold=60, outlook_threshold=60):
+    normalized_sentiment_score = zscore([sentiment_score]) * 50 + 50  # Normalize to 0-100 scale
+    normalized_outlook_score = zscore([outlook_score]) * 50 + 50
+
+    if normalized_sentiment_score > sentiment_threshold and normalized_outlook_score > outlook_threshold:
+        return True
+    return False
+
 
 logger = logging.getLogger('Main')
 
@@ -23,17 +32,14 @@ def load_config(config_file='config.json'):
 def main():
     config = load_config()
 
-    # Initialize components with config values
     data_fetcher = FinancialDataFetcher(historical_data_length=config['historical_data_length'])
     reddit_fetcher = RedditNewsFetcher(config['reddit_api_keys'], posts_limit=config['reddit_posts_limit'])
-    gdelt_fetcher = GDELTFetcher(config['gnews_api_key'])
+    gdelt_fetcher = GDELTFetcher(config['gdelt_api_key'])
     sentiment_analyzer = AdvancedSentimentAnalyzer(
         model_name=config['sentiment_analysis']['model_name'],
-        device=config['sentiment_analysis']['device'],
-        max_length=config['sentiment_analysis']['max_length']
-    )
+        device=config['sentiment_analysis']['device'], max_length=config['sentiment_analysis']['max_length'])
+    viable_stocks = []
 
-    # Process each ticker in the config
     for ticker in config['tickers']:
         logger.info(f"Processing ticker: {ticker}")
 
@@ -54,7 +60,11 @@ def main():
         global_news = gdelt_fetcher.fetch_news(config['global_market_keywords'])
         logger.debug(f"Global market news: {global_news}")
 
-    logger.info("Completed processing all tickers.")
+        outlook_score = ...  # Future outlook analysis logic
 
-if __name__ == "__main__":
-    main()
+        # Evaluate stock viability
+        if evaluate_stock_viability(sentiment_score, outlook_score):
+            viable_stocks.append(ticker)
+
+    logger.info(f"Viable stocks: {viable_stocks}")
+    logger.info("Completed processing all tickers.")
