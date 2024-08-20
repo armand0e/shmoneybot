@@ -1,8 +1,0 @@
-yfinance
-requests
-praw
-transformers
-numpy
-logging
-beautifulsoup4
-google-api-python-client
