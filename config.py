@@ -15,18 +15,12 @@ SETTINGS = {
     ],  
     'tickers_and_keywords': {
         # keywords can be hardcoded or replaced:
-            #"GOOGL": ["Google", "Alphabet", "YouTube", "Android"],
-            #"AMZN": ["Amazon", "AWS", "Prime", "Bezos"],
-            #"TSLA": ["Tesla", "Musk", "Model 3", "EV"],
-            #"NVDA": ["Nvidia", "AI", "GPU", "Blackwell"],
-            #"AVGO": ["Broadcomm", "Semiconductor", "GPU", "AI"]
-        "AAPL": generate_keywords('AAPL'),
-        "MSFT": generate_keywords('MSFT'),
-        "GOOGL": generate_keywords('GOOGL'),
-        "AMZN": generate_keywords('AMZN'),
-        "TSLA": generate_keywords('TSLA'),
-        "NVDA": generate_keywords('NVDA'),
-        "AVGO": generate_keywords('AVGO')
+        "GOOGL": ["Google", "Alphabet", "YouTube", "Android"],
+        "AMZN": ["Amazon", "AWS", "Prime", "Bezos"],
+        "TSLA": ["Tesla", "Musk", "Model 3", "EV"],
+        "NVDA": ["Nvidia", "AI", "GPU", "Blackwell"],
+        "AVGO": ["Broadcomm", "Semiconductor", "GPU", "AI"]
     }
+    
 }
 

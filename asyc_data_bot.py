@@ -1,18 +1,15 @@
-import asyncpraw
+import praw
 import logging
 import sqlite3
-import asyncio
+import random
 import time
+import threading
 import config
 from collections import defaultdict
-from aiolimiter import AsyncLimiter
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)  # Switch to DEBUG level
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NewsDataCollectionBot")
-
-# Rate limiter (60 requests per minute)
-rate_limiter = AsyncLimiter(60, 60)
 
 # Setup and initialize the SQLite database
 def setup_database():
@@ -56,31 +53,28 @@ def setup_database():
     return conn
 
 # Check the rate limit and sleep if necessary
-async def check_rate_limit(reddit):
-    async with rate_limiter:
-        remaining = int(reddit.auth.limits.get('remaining', 1))
-        reset_time = reddit.auth.limits.get('reset_timestamp', time.time() + 60)
-        current_time = time.time()
-
-        if remaining < 10:
-            sleep_duration = max(reset_time - current_time, 1)
-            logger.info(f"Rate limit close to being exhausted. Sleeping for {sleep_duration} seconds.")
-            await asyncio.sleep(sleep_duration + 5)  # Add a buffer to the sleep duration
-            return True
-        return False
+def check_rate_limit(reddit, backoff=2):
+    remaining = int(reddit.auth.limits.get('remaining', 1))
+    reset_time = reddit.auth.limits.get('reset_timestamp', time.time() + 60)
+    current_time = time.time()
+    
+    if remaining < 10:
+        sleep_duration = max(reset_time - current_time, 1)
+        logger.info(f"Rate limit close to being exhausted. Sleeping for {sleep_duration} seconds.")
+        time.sleep(sleep_duration + 5 + (backoff ** 2))
+        return True
+    return False
 
 # Fetch and process Reddit comments for a specific post
-async def fetch_comments(post, conn, progress):
+def fetch_comments(post, conn, progress):
     c = conn.cursor()
     comment_data = []
     comments_fetched = 0
     comments_skipped = 0
-
-    await post.comments.replace_more(limit=None)
-
-    async for comment in post.comments.list():
-        if comments_fetched >= 10:  # Limit to top 10 comments
-            break
+    
+    post.comments.replace_more(limit=None)
+    
+    for comment in post.comments.list()[:10]:
         c.execute("SELECT comment_id FROM comments WHERE comment_id=?", (comment.id,))
         if c.fetchone():
             comments_skipped += 1
@@ -96,25 +90,25 @@ async def fetch_comments(post, conn, progress):
             'permalink': comment.permalink
         })
         comments_fetched += 1
-
+    
     if comment_data:
         c.executemany('''INSERT INTO comments (comment_id, post_id, author, body, timestamp, score, permalink)
                          VALUES (:comment_id, :post_id, :author, :body, :timestamp, :score, :permalink)''', comment_data)
         conn.commit()
-
+    
     progress['comments_fetched'] += comments_fetched
     progress['comments_skipped'] += comments_skipped
 
 # Periodic logging of progress
-async def log_progress(progress_dict):
+def log_progress(progress_dict):
     while True:
-        await asyncio.sleep(30)
+        time.sleep(30)
         for ticker, progress in progress_dict.items():
-            logger.info(f"Progress for {ticker} in the last 30 seconds:\n"
-                        f" - Posts Fetched: {progress['posts_fetched']}\n"
-                        f" - Posts Skipped: {progress['posts_skipped']}\n"
-                        f" - Comments Fetched: {progress['comments_fetched']}\n"
-                        f" - Comments Skipped: {progress['comments_skipped']}")
+            logger.debug(f"Progress for {ticker} in the last 30 seconds:\n"
+                         f" - Posts Fetched: {progress['posts_fetched']}\n"
+                         f" - Posts Skipped: {progress['posts_skipped']}\n"
+                         f" - Comments Fetched: {progress['comments_fetched']}\n"
+                         f" - Comments Skipped: {progress['comments_skipped']}")
             # Reset progress counters
             progress['posts_fetched'] = 0
             progress['posts_skipped'] = 0
@@ -122,145 +116,146 @@ async def log_progress(progress_dict):
             progress['comments_skipped'] = 0
 
 # Fetch historical data from Reddit
-async def fetch_historical_data(ticker, progress):
+def fetch_historical_data(ticker, subreddit_name, progress):
     conn = setup_database()
-    logger.info(f"Fetching historical data for {ticker}")
-
-    reddit = asyncpraw.Reddit(
+    logger.info(f"Fetching historical data for {ticker} from {subreddit_name}")
+    
+    reddit = praw.Reddit(
         client_id=config.API_KEYS['reddit_client_id'],
         client_secret=config.API_KEYS['reddit_client_secret'],
         user_agent=config.API_KEYS['reddit_user_agent']
     )
-
-    subreddits = ['investing', 'stocks', 'news', 'finance', 'technology', 'cryptocurrency']
+    
     queries = config.SETTINGS['tickers_and_keywords'][ticker]
 
+    backoff = 2
+
     try:
-        for subreddit_name in subreddits:
-            subreddit = await reddit.subreddit(subreddit_name)
-            
-            c = conn.cursor()
-            c.execute("SELECT last_fetched FROM progress WHERE ticker=?", (ticker,))
-            last_fetched = c.fetchone()
-            last_fetched = last_fetched[0] if last_fetched else 0
+        subreddit = reddit.subreddit(subreddit_name)
+        
+        c = conn.cursor()
+        c.execute("SELECT last_fetched FROM progress WHERE ticker=?", (ticker,))
+        last_fetched = c.fetchone()
+        last_fetched = last_fetched[0] if last_fetched else 0
 
-            for query in queries:
-                logger.debug(f"Searching in subreddit {subreddit_name} with query '{query}'")
-                async for post in subreddit.search(query, sort='new', time_filter='all'):
-                    logger.debug(f"Found post: {post.title} (ID: {post.id})")
-                    if post.created_utc <= last_fetched:
-                        logger.debug(f"Skipping post {post.id}, older than last fetched time.")
-                        continue
+        for query in queries:
+            for post in subreddit.search(query, sort='new', time_filter='all'):
+                #if post.created_utc <= last_fetched:
+                #    continue
 
-                    if await check_rate_limit(reddit):
-                        continue
-
-                    c.execute("SELECT id FROM news WHERE id=?", (post.id,))
-                    if c.fetchone():
-                        logger.debug(f"Post {post.id} already in database, skipping.")
-                        progress['posts_skipped'] += 1
-                        continue
-
-                    if not post.stickied:
-                        news_data = [{
-                            'id': post.id,
-                            'ticker': ticker,
-                            'timestamp': post.created_utc,
-                            'title': post.title,
-                            'text': post.selftext,
-                            'score': post.score,
-                            'comments': post.num_comments,
-                            'last_fetched': post.created_utc
-                        }]
-                        
-                        c.executemany('''INSERT INTO news (id, ticker, timestamp, title, text, score, comments, last_fetched)
-                                         VALUES (:id, :ticker, :timestamp, :title, :text, :score, :comments, :last_fetched)''', news_data)
-                        conn.commit()
-                        progress['posts_fetched'] += 1
-
-                        await fetch_comments(post, conn, progress)
-
-                        c.execute("INSERT OR REPLACE INTO progress (ticker, last_fetched) VALUES (?, ?)",
-                                  (ticker, post.created_utc))
-                        conn.commit()
+                if check_rate_limit(reddit, backoff):
+                    backoff += 1
+                else:
+                    backoff = 2
+                
+                c.execute("SELECT id FROM news WHERE id=?", (post.id,))
+                if c.fetchone():
+                    progress['posts_skipped'] += 1
+                    continue
+                
+                if not post.stickied:
+                    news_data = [{
+                        'id': post.id,
+                        'ticker': ticker,
+                        'timestamp': post.created_utc,
+                        'title': post.title,
+                        'text': post.selftext,
+                        'score': post.score,
+                        'comments': post.num_comments,
+                        'last_fetched': post.created_utc
+                    }]
+                    
+                    c.executemany('''INSERT INTO news (id, ticker, timestamp, title, text, score, comments, last_fetched)
+                                     VALUES (:id, :ticker, :timestamp, :title, :text, :score, :comments, :last_fetched)''', news_data)
+                    conn.commit()
+                    progress['posts_fetched'] += 1
+                    logger.info(f'Fetched 1 post for {ticker}')
+                    fetch_comments(post, conn, progress)
+                    
+                    c.execute("INSERT OR REPLACE INTO progress (ticker, last_fetched) VALUES (?, ?)",
+                              (ticker, post.created_utc))
+                    conn.commit()
     except Exception as e:
         logger.error(f"Error fetching historical data for {ticker}: {e}")
     finally:
         conn.close()
 
 # Fetch real-time data from Reddit
-async def fetch_realtime_data(ticker, progress):
+def fetch_realtime_data(ticker, subreddit_name, progress):
     conn = setup_database()
     c = conn.cursor()
+    backoff = 1
 
     try:
-        logger.info(f"Fetching real-time data for {ticker}")
-
-        reddit = asyncpraw.Reddit(
+        logger.info(f"Fetching real-time data for {ticker} from {subreddit_name}")
+        
+        reddit = praw.Reddit(
             client_id=config.API_KEYS['reddit_client_id'],
             client_secret=config.API_KEYS['reddit_client_secret'],
             user_agent=config.API_KEYS['reddit_user_agent']
         )
-
-        subreddits = ['investing', 'stocks', 'news', 'finance', 'technology', 'cryptocurrency']
+        
         queries = config.SETTINGS['tickers_and_keywords'][ticker]
 
-        for subreddit_name in subreddits:
-            subreddit = await reddit.subreddit(subreddit_name)
-
-            async for post in subreddit.stream.submissions():
-                if await check_rate_limit(reddit):
+        subreddit = reddit.subreddit(subreddit_name)
+        
+        for post in subreddit.stream.submissions():
+            if check_rate_limit(reddit, backoff):
+                backoff += 1
+            else:
+                backoff = 1
+            
+            if any(query.lower() in post.title.lower() for query in queries):
+                c.execute("SELECT id FROM news WHERE id=?", (post.id,))
+                if c.fetchone():
+                    progress['posts_skipped'] += 1
                     continue
-
-                if any(query.lower() in post.title.lower() for query in queries):
-                    logger.debug(f"Matching post found: {post.title} (ID: {post.id})")
-                    c.execute("SELECT id FROM news WHERE id=?", (post.id,))
-                    if c.fetchone():
-                        logger.debug(f"Post {post.id} already in database, skipping.")
-                        progress['posts_skipped'] += 1
-                        continue
-
-                    if not post.stickied:
-                        news_data = [{
-                            'id': post.id,
-                            'ticker': ticker,
-                            'timestamp': post.created_utc,
-                            'title': post.title,
-                            'text': post.selftext,
-                            'score': post.score,
-                            'comments': post.num_comments
-                        }]
-
-                        c.executemany('''INSERT INTO news (id, ticker, timestamp, title, text, score, comments)
-                                         VALUES (:id, :ticker, :timestamp, :title, :text, :score, :comments)''', news_data)
-                        conn.commit()
-                        progress['posts_fetched'] += 1
-
-                        await fetch_comments(post, conn, progress)
+                
+                if not post.stickied:
+                    news_data = [{
+                        'id': post.id,
+                        'ticker': ticker,
+                        'timestamp': post.created_utc,
+                        'title': post.title,
+                        'text': post.selftext,
+                        'score': post.score,
+                        'comments': post.num_comments
+                    }]
+                    
+                    c.executemany('''INSERT INTO news (id, ticker, timestamp, title, text, score, comments)
+                                     VALUES (:id, :ticker, :timestamp, :title, :text, :score, :comments)''', news_data)
+                    conn.commit()
+                    progress['posts_fetched'] += 1
+                    logger.info(f'Fetched 1 post for {ticker}')
+                    
+                    fetch_comments(post, conn, progress)
     except Exception as e:
         logger.error(f"Error fetching real-time data for {ticker}: {e}")
     finally:
         conn.close()
 
 # Main function to run the bot
-async def main():
-    tickers = config.SETTINGS['tickers_and_keywords'].keys()
+def main():
+    tickers = list(config.SETTINGS['tickers_and_keywords'].keys())
+    subreddits = ['investing', 'stocks', 'news', 'finance', 'technology', 'cryptocurrency']
     progress_dict = defaultdict(lambda: {'posts_fetched': 0, 'posts_skipped': 0, 'comments_fetched': 0, 'comments_skipped': 0})
+    
+    # Start logging thread
+    logging_thread = threading.Thread(target=log_progress, args=(progress_dict,))
+    logging_thread.daemon = True  # Daemon thread will exit when the main program exits
+    logging_thread.start()
 
-    tasks = []
-    for ticker in tickers:
-        tasks.append(fetch_realtime_data(ticker, progress_dict[ticker]))
-        await asyncio.sleep(1)  # Staggered start to reduce load
+    while True:
+        ticker = random.choice(tickers)
+        subreddit_name = random.choice(subreddits)
 
-    for ticker in tickers:
-        tasks.append(fetch_historical_data(ticker, progress_dict[ticker]))
-        await asyncio.sleep(1)
+        # Fetch real-time data
+        # fetch_realtime_data(ticker, subreddit_name, progress_dict[ticker])
 
-    # Start logging progress
-    log_task = asyncio.create_task(log_progress(progress_dict))
-    tasks.append(log_task)
+        # Fetch historical data
+        fetch_historical_data(ticker, subreddit_name, progress_dict[ticker])
 
-    await asyncio.gather(*tasks)
-
+        # Adjust the sleep duration to control the frequency of selecting a new ticker and subreddit
+        #time.sleep(1)
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
